@@ -4,11 +4,7 @@ import os
 import cv2
 import numpy as np
 import json
-import glob
 from scipy.spatial.transform import Rotation as R
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 import rclpy
 from rclpy.node import Node
@@ -27,7 +23,6 @@ class HandEyeCalibration(Node):
         
         # Declare parameters
         self.declare_parameter('image_topic', '/rgb/image_raw')
-        self.declare_parameter('depth_topic', '/depth/image_raw')
         self.declare_parameter('camera_info_topic', '/rgb/camera_info')
         self.declare_parameter('source_frame', 'base_link')
         self.declare_parameter('target_frame', 'right_arm_tool0')
@@ -39,7 +34,6 @@ class HandEyeCalibration(Node):
 
         # Get parameters
         self.image_topic = self.get_parameter('image_topic').value
-        self.depth_topic = self.get_parameter('depth_topic').value
         self.camera_info_topic = self.get_parameter('camera_info_topic').value
         self.source_frame = self.get_parameter('source_frame').value
         self.target_frame = self.get_parameter('target_frame').value
@@ -294,7 +288,7 @@ class HandEyeCalibration(Node):
         
         if self.silence_timer is not None:
             self.silence_timer.cancel()
-            
+
         if self.frame_count == 0:
             self.get_logger().error("No frames collected!")
             return
