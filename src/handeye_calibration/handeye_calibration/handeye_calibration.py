@@ -74,6 +74,12 @@ class HandEyeCalibration(Node):
         self.board_translations = []
         self.board_rotations = []
 
+        # Timer for detecting image topic silence
+        self.last_image_time = None
+        self.silence_timer = None
+        self.silence_duration = 3.0  # 3 seconds
+        self.collection_finished = False
+
         # TF2 setup
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -95,12 +101,34 @@ class HandEyeCalibration(Node):
         if not self.collecting:
             self.get_logger().warn("Not collecting yet, waiting for camera info")
             return
+        self.last_image_time = self.get_clock().now()
+        self.reset_silence_timer()
 
         if self.i % self.collection_rate == self.collection_rate - 1:  # Collect every nth image
             self.latest_image = msg
             self.collect_frame()
 
         self.i += 1
+    def reset_silence_timer(self):
+        """Reset the silence detection timer."""
+        if self.silence_timer is not None:
+            self.silence_timer.cancel()
+
+        self.silence_timer = self.create_timer(self.silence_duration, self.check_silence)
+
+    def check_silence(self):
+        """Check if image topic has been silent for too long."""
+        if self.collection_finished:
+            return
+        
+        current_time = self.get_clock().now()
+        if self.last_image_time is not None:
+            elapsed = (current_time - self.last_image_time).nanoseconds / 1e9
+
+            if elapsed >= self.silence_duration:
+                self.get_logger().info("Image topic silent for too long, finishing collection")
+                self.finish_collection()
+                self.collection_finished = True
 
     def camera_info_callback(self, msg):
         """Get camera parameters once."""
@@ -258,8 +286,15 @@ class HandEyeCalibration(Node):
     
     def finish_collection(self):
         """Process collected images and perform hand-eye calibration."""
+        if self.collection_finished:
+            return
+        
+        self.collection_finished = True
         self.collecting = False
         
+        if self.silence_timer is not None:
+            self.silence_timer.cancel()
+            
         if self.frame_count == 0:
             self.get_logger().error("No frames collected!")
             return
