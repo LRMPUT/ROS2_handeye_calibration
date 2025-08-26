@@ -23,7 +23,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Python libs frequently used by collectors
-RUN pip install --no-cache-dir numpy==1.26.* pillow==10.* scipy==1.15.* matplotlib==3.8.* transforms3d
+RUN apt-get update && apt-get install -y --no-install-recommends \ 
+    python3-numpy \
+    python3-pillow \
+    python3-scipy \
+    python3-transforms3d \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create workspace and clone Robot2Nerf
 ENV WS=/ros2_ws
