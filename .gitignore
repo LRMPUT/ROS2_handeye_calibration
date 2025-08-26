@@ -1,3 +1,6 @@
 install
 build
 log
+bag_folder/
+outputs/
+.vscode/
