@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 # Simple runner for the ROS2 collector container.
 # Usage:
-#   ./run_docker.sh bag_folder/tomato_soup_can \
-#     --image_topic /rgb/image_raw \
-#     --camera_info_topic /rgb/camera_info \
-#     --source_frame base_link \
-#     --target_frame azure_rgb \
-#     --output_dir /workspace/outputs/dataset_from_bag \
-#     --collection_rate 10
+#   ./run_docker.sh calibr_eryk
+
 
 set -euo pipefail
 
@@ -19,15 +14,19 @@ DISTRO="${ROS_DISTRO:-humble}"
 IMAGE_NAME="ros2_collector:${DISTRO}"
 
 if [[ "$#" -lt 1 ]]; then
-	echo "Usage: $0 <repo-relative-bag-dir> [collector args]"
+	echo "Usage: $0 <bag_name>"
+	echo "Note: Place your bags in the bag_folder directory"
 	exit 1
 fi
 
-BAG_DIR_REL="$1"; shift || true
-COLLECTOR_ARGS=( "$@" )
+# Construct path relative to bag_folder
+BAG_NAME="$1"
+BAG_DIR_REL="bag_folder/$BAG_NAME"
 
+# Check if bag folder exists
 if [[ ! -d "$REPO_ROOT/$BAG_DIR_REL" ]]; then
-	echo "Error: '$BAG_DIR_REL' not found under repo: $REPO_ROOT"
+	echo "Error: Bag '$BAG_NAME' not found in bag_folder"
+	echo "Please place your bag files in: $REPO_ROOT/bag_folder/$BAG_NAME"
 	exit 2
 fi
 

@@ -3,6 +3,7 @@
 ARG ROS_DISTRO=humble
 FROM ros:${ROS_DISTRO}-ros-base
 
+# Environment setup
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Etc/UTC \
     ROS_DISTRO=${ROS_DISTRO}
@@ -11,15 +12,16 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     python3-rosdep \
+    python3-pip \
+    python3-opencv \
+    python3-colcon-common-extensions \
+    bash-completion \
+    # ROS packages
     ros-${ROS_DISTRO}-rosbag2 \
     ros-${ROS_DISTRO}-tf2-ros \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-tf2-geometry-msgs \
-    python3-pip \
-    python3-opencv \
-    python3-colcon-common-extensions \
-    bash-completion \
     && rm -rf /var/lib/apt/lists/*
 
 # Python libs frequently used by collectors
@@ -45,17 +47,17 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc && \
     echo "source $WS/install/setup.bash" >> /root/.bashrc
 
-# Convenience runner: plays a bag and runs the collector with params.
-# Usage inside container:
-#   run_robot2nerf.sh /bags/rosbag2_xxx  \ 
-#       --image_topic /rgb/image_raw --camera_info_topic /rgb/camera_info \
-#       --source_frame base_link --target_frame azure_rgb \
-#       --output_dir /workspace/nerf_dataset/from_bag --collection_rate 10.0
+#
+# Script Setup
+#
+
+# Create handeye calibration runner script
 RUN cat > /usr/local/bin/run_robot2nerf.sh <<'EOS'
 #!/usr/bin/env bash
 
 set -eo pipefail
 
+# Validate input
 if [[ "$#" -lt 1 ]]; then
     echo "Usage: $0 <bag_path>"
     exit 1
@@ -80,7 +82,11 @@ trap cleanup EXIT INT TERM
 
 # Run node in background and play bag
 ros2 run handeye_calibration handeye_calibration &
-sleep 2  # Give node time to initialize
+
+# Allow node initialization
+sleep 2
+
+# Start bag playback
 ros2 bag play "$BAG_PATH" --clock
 
 # Wait for any remaining processes

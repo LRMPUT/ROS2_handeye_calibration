@@ -25,7 +25,7 @@ A ROS2 package for performing hand-eye calibration using a chessboard pattern. T
 3. Run the calibration:
    ```bash
    cd docker
-   ./run_docker.sh bag_folder/<your_bag_name>
+   ./run_docker.sh <your_bag_name>
    ```
 
 4. Find results in the `hand_eye_calibration_data` folder:
