@@ -59,7 +59,8 @@ set -eo pipefail
 
 # Validate input
 if [[ "$#" -lt 1 ]]; then
-    echo "Usage: $0 <bag_path>"
+    echo "Usage: $0 <bag_path> [ros_args...]"
+    echo "Example: $0 /path/to/bag --ros-args -p param:=value"
     exit 1
 fi
 
@@ -80,8 +81,12 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# Get all arguments after the bag path as ROS args
+shift
+ROS_ARGS=("${@}")
+
 # Run node in background and play bag
-ros2 run handeye_calibration handeye_calibration &
+ros2 run handeye_calibration handeye_calibration "${ROS_ARGS[@]}" &
 
 # Allow node initialization
 sleep 2
