@@ -87,8 +87,16 @@ class HandEyeCalibration(Node):
             Image, self.image_topic, self.image_callback, 1
         )
         
-        self.get_logger().info(f"Hand-Eye Calibration initialized")
-        self.get_logger().info(f"Will collect every {self.collection_rate} frames")
+        # Print all parameters
+        self.get_logger().info("Hand-Eye Calibration initialized with parameters:")
+        self.get_logger().info(f"  Image topic: {self.image_topic}")
+        self.get_logger().info(f"  Camera info topic: {self.camera_info_topic}")
+        self.get_logger().info(f"  Source frame: {self.source_frame}")
+        self.get_logger().info(f"  Target frame: {self.target_frame}")
+        self.get_logger().info(f"  Output directory: {self.output_dir}")
+        self.get_logger().info(f"  Collection rate: {self.collection_rate}")
+        self.get_logger().info(f"  Chessboard size: {self.chessboard_cols}x{self.chessboard_rows}")
+        self.get_logger().info(f"  Square size: {self.square_size}m")
 
     def image_callback(self, msg):
         """Store the latest image."""
